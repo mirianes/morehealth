@@ -1,5 +1,5 @@
 const User = require('../schemas/user')
-const { checkUsfExists } = require('./usf')
+const { checkCnesExists } = require('./usf')
 const { checkEmpty } = require('./util')
 
 const create = async (req, res, next) => {
@@ -7,7 +7,7 @@ const create = async (req, res, next) => {
         if (checkEmpty(req.body.usf_id)) {
             return res.status(400).send('O campo usf não pode ficar vazio.')
         }
-        if (await checkUsfExists(req.body.usf_id) == false) {
+        if (await checkCnesExists(req.body.usf_id) == false) {
             return res.status(400).send('Essa usf não existe.')
         }
         if (checkEmpty(req.body.email)) {
