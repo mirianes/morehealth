@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
+  "engines": {
+    "node": "10.x"
+  },
   "dependencies": {
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.3",
@@ -15,7 +18,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./bin/server.js"
+    "start": "npm ./bin/server.js"
   },
   "keywords": [],
   "author": "",
