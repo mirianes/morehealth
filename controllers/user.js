@@ -21,6 +21,9 @@ const list = (req, res) => {
         if (err) {
             return res.status(400).send({error: err})
         } else {
+            users.forEach(user => {
+                user.password = undefined
+            })
             return res.status(200).send(users)
         }
     })
