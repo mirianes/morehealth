@@ -13,6 +13,9 @@ let Usf = new Schema({
     },
     cnes: {
         type: String
+    },
+    phone: {
+        type: String
     }
 })
 
