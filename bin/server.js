@@ -16,5 +16,5 @@ connection.once('open', function() {
 })
 
 app.listen(PORT, () => {
-    console.log('MoreHealth API listening on port 4000')
+    console.log(`MoreHealth API listening on port ${PORT}`)
 })
