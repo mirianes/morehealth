@@ -1,5 +1,4 @@
 const app = require('../app')
-const PORT = 4000
 
 // const bodyParser = require('body-parser')
 // const cors = require('cors')
@@ -15,6 +14,5 @@ connection.once('open', function() {
     console.log("MongoDB database connection established successfully");
 })
 
-app.listen(PORT, () => {
-    console.log(`MoreHealth API listening on port ${PORT}`)
-})
+app.listen(process.env.PORT || 4000)
+console.log(`MoreHealth API listening on port ${process.env.PORT || 4000}`)
