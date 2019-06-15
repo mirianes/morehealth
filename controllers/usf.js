@@ -1,4 +1,5 @@
 const Usf = require('../schemas/usf')
+const User = require('../schemas/user')
 
 const create = (req, res) => {
     let usf = new Usf(req.body)
@@ -48,9 +49,33 @@ const drop = (req, res) => {
     })
 }
 
+const getData = async (req, res) => {
+    try {
+        let usf = await Usf.findOne({
+            cnes: req.params.id
+        })
+    
+        let doctorFind = await User.findOne({
+            usf_id: req.params.id,
+            user_type: 1
+        })
+    
+        let doctor = {
+            name: doctorFind.name,
+            crm: doctorFind.code
+        }
+    
+        return res.status(200).send({usf: usf, doctor: doctor})
+    } catch (error) {
+        console.log(error)
+        return res.status(400).send({error: error})
+    }
+}
+
 module.exports = {
     create,
     list,
     update,
-    drop
+    drop,
+    getData
 }

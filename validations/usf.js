@@ -80,10 +80,18 @@ const checkCnesExists = async (usfID, res) => {
     }
 }
 
+const getData = async (req, res, next) => {
+    if (await checkCnesExists(req.params.id, res) == false) {
+        return res.status(400).send({error: 'Essa USF não existe.'})
+    }
+    next()
+}
+
 module.exports = {
     create,
     list,
     update,
     drop,
-    checkCnesExists
+    checkCnesExists,
+    getData
 }

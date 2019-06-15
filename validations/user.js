@@ -62,11 +62,9 @@ const login = async (req, res, next) => {
     if (checkEmpty(req.body.email)) {
         return res.status(400).send({error: 'O campo e-mail não pode ficar vazio.'})
     }
-    console.log('passei do primeiro')
     if (checkEmpty(req.body.password)) {
         return res.status(400).send({error: 'O campo senha não pode ficar vazio.'})
     }
-    console.log('passei do segundo')
     if (await checkEmailExists(req.body.email, res) == false) {
         return res.status(400).send({error: 'Usuário não encontrado.'})
     }

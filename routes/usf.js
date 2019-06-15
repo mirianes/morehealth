@@ -9,4 +9,6 @@ router.post('/', usfValidation.create, usfController.create)
       .put('/:id', usfValidation.update, usfController.update)
       .delete('/:id', usfValidation.drop, usfController.drop)
 
+router.get('/getData/:id', usfValidation.getData, usfController.getData)
+
 module.exports = router;
