@@ -1,0 +1,27 @@
+{
+  "name": "morehealth-elasticSearchapi",
+  "version": "1.0.0",
+  "description": "Projeto criado para a cadeira de _Desenvolvimento de Aplicações Nativas da Nuvem com Arquitetura Baseada em Microservices_, __MoreHealth__ surge da descoberta da _Unidade de Saúde da Família (USF)_ e dos seus processos e da necessidade de automatizar muitos dos processos existentes no local. Este projeto deve ajudar no melhor controle e gerenciamento dos atendimentos diários no local, facilitando o trabalho do médico e do enfermeiro chefe e gerando antedimentos com maior qualidade.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./bin/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mirianes/morehealth.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mirianes/morehealth/issues"
+  },
+  "homepage": "https://github.com/mirianes/morehealth#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "elasticsearch": "^16.1.1",
+    "express": "^4.17.1"
+  }
+}
