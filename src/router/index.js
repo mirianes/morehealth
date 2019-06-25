@@ -4,6 +4,7 @@ import Login from '@/components/Login'
 import Cadastro from '@/components/Cadastro'
 import CadastroUSF from '@/components/CadastroUSF'
 import Consulta from '@/components/Consulta'
+import ExameEncaminhamento from '@/components/ExameEncaminhamento'
 import NotFound from '@/components/NotFound'
 
 const router = new Router({
@@ -13,6 +14,7 @@ const router = new Router({
     { path: '/cadastro', name: 'Cadastro', component: Cadastro, meta: { guest: true } },
     { path: '/cadastrousf', name: 'CadastroUSF', component: CadastroUSF, meta: { guest: true } },
     { path: '/consulta', name: 'Consulta', component: Consulta, meta: { requiresAuth: true } },
+    { path: '/examesEncaminhamentos', name: 'ExameEncaminhamento', component: ExameEncaminhamento, meta: { requiresAuth: true } },
     { path: '/*', name: 'NotFound', component: NotFound}
   ]
 })

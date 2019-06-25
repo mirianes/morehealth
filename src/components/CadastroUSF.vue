@@ -34,19 +34,22 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="input-field col s6">
+                            <div class="col s12 m4 l2"/>
+                            <div class="input-field col s12 m4 l8">
                                 <input type="text" id="state" :class="{valid: msgStateError == 'success', 
                                 invalid: (msgStateError !== '' && msgStateError !== 'success')}" @change="checkState()" v-model="state"/>
                                 <label for="state">Estado</label>
                                 <span class="helper-text" :data-error="msgStateError" data-success=""></span>
                             </div>
-                            <div class="col s6">
-                                <button class="btn waves-effect waves-light" type="submit" name="action" @click="checkUsf()">Cadastrar
-                                    <i class="material-icons right">send</i>
-                                </button>
-                            </div>
+                            <div class="col s12 m4 l2"/>
                         </div>
                     </div>
+                    <div class="col s6 offset-s6 right-align">
+                        <button class="btn waves-effect waves-light" type="submit" name="action" @click="checkUsf()">Cadastrar
+                            <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+                    
                 </div>
             </div>
             <div class="col s5 pull-s7" id="left">

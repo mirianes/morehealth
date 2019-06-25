@@ -5,18 +5,23 @@ import App from './App'
 import VueRouter from 'vue-router'
 import VueResource from 'vue-resource'
 import Vuex from 'vuex'
+import VueCalendar from 'v-calendar'
+import VueCtkDateTimePicker from 'vue-ctk-date-time-picker'
 
 import router from './router'
 import store from './store'
 
 import 'materialize-css/dist/css/materialize.min.css'
 import 'materialize-css/dist/js/materialize.min.js'
-
+import 'vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css'
 Vue.config.productionTip = false
 
 Vue.use(VueRouter)
 Vue.use(VueResource)
 Vue.use(Vuex)
+Vue.use(VueCalendar, {
+  componentPrefix: 'vc'
+})
 
 Vue.http.options.emulateJSON = true;
 Vue.http.options.emulateHTTP = true;
