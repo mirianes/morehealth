@@ -7,23 +7,13 @@ const cors = require('cors')
 app.use(cors())
 app.use(bodyParser.json())
 
-const { client } = require('./config/config')
-
-client.ping({
-    requestTimeout: 30000,
-  }, function (error) {
-    if (error) {
-      console.error('elasticsearch cluster is down!');
-    } else {
-      console.log('All is well');
-    }
-  });
 // const indexRouter = require('./routes/index')
-// const userRouter = require('./routes/user')
-// const usfRouter = require('./routes/usf')
+const consultRouter = require('./routes/consulta')
+const vagasRouter = require('./routes/vagas')
 
-// app.use('/user', userRouter)
-// app.use('/usf', usfRouter)
+app.use('/consult', consultRouter)
+app.use('/vacancies', vagasRouter)
 // app.use('/', indexRouter)
 
-module.exports = app
+app.listen(process.env.PORT || 4001)
+console.log(`MoreHealth ElasticSearchAPI listening on port ${process.env.PORT || 4001}`)
