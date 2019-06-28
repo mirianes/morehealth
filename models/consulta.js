@@ -1,10 +1,10 @@
-const client = require('../config/config')
+const { consultClient } = require('../config/config')
 
 const indexName = 'morehealth_consulta'
 const typeName = 'consulta'
 
-const insertConsult = (data) => {
-    return client.index({
+const insertConsult = async (data) => {
+    return await consultClient.index({
         index: indexName,
         type: typeName,
         body: {
@@ -16,8 +16,8 @@ const insertConsult = (data) => {
     })
 }
 
-const updateConsult = (data) => {
-    return client.updateByQuery({
+const updateConsult = async (data) => {
+    return await consultClient.updateByQuery({
         index: indexName,
         conflicts: "proceed",
         body: {
@@ -34,8 +34,8 @@ const updateConsult = (data) => {
     })
 }
 
-const listConsult = (data) => {
-    return client.search({
+const listConsult = async (data) => {
+    return await consultClient.search({
         index: indexName,
         type: typeName,
         body: {

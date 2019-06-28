@@ -22,7 +22,8 @@ const update = async (req, res) => {
             totalVagas: req.body.totalVagas
         })
         if (vaga.updated) {
-            return res.status(200).send(true)
+            let vagas = await listVaga(req.body.date)
+            return res.status(200).send(vagas.hits.hits)
         } else {
             return res.status(400).send(false)
         }

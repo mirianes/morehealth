@@ -1,22 +1,22 @@
-const { consultClient } = require('../config/config')
+const { examClient } = require('../config/config')
 
-const indexName = 'morehealth_vagas'
-const typeName = 'vagas'
+const indexName = 'morehealth_exameencaminhamento'
+const typeName = 'exameEncaminhamento'
 
-const insertVaga = async (data) => {
-    return await consultClient.index({
+const insertExamRouting = async (data) => {
+    return await examClient.index({
         index: indexName,
         type: typeName,
         body: {
-            date: data.date,
-            totalVagas: data.totalVagas,
-            vagasOcupadas: data.vagasOcupadas
+            type: data.type,
+            vagas: data.vagas,
+            indicator: data.indicator
         }
     })
 }
 
-const updateVaga = async (data) => {
-    return await consultClient.updateByQuery({
+const updateType = async (data) => {
+    return await examClient.updateByQuery({
         index: indexName,
         conflicts: "proceed",
         body: {
@@ -27,18 +27,19 @@ const updateVaga = async (data) => {
                 },
             },
             script: {
-                "source": "ctx._source.totalVagas = params.totalVagas",
+                "source": "ctx._source.type = params.type; ctx._source.vagas = params.vagas",
                 "lang": "painless",
                 "params" : {
-                  "totalVagas": data.totalVagas
+                  "type": data.type,
+                  "vagas": data.vagas
                 }
             }
         }
     })
 }
 
-const addConsult = async (data) => {
-    return await consultClient.updateByQuery({
+const addExamRouting = async (data) => {
+    return await examClient.updateByQuery({
         index: indexName,
         conflicts: "proceed",
         body: {
@@ -49,21 +50,21 @@ const addConsult = async (data) => {
                 },
             },
             script: {
-                "source": "ctx._source.vagasOcupadas += 1"
+                "source": "ctx._source.vagas -= 1"
             }
         }
     })
 }
 
-const listVaga = async (data) => {
-    return await consultClient.search({
+const listExamRouting = async (data) => {
+    return await examClient.search({
         index: indexName,
         type: typeName,
         body: {
             size: 50,
             query: {
                 match: {
-                    date: data
+                    indicator: data
                 }
             }
         }
@@ -71,8 +72,8 @@ const listVaga = async (data) => {
 }
 
 module.exports = {
-    insertVaga,
-    updateVaga,
-    addConsult,
-    listVaga
+    insertExamRouting,
+    updateType,
+    addExamRouting,
+    listExamRouting
 }

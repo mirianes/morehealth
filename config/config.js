@@ -1,9 +1,17 @@
 const elasticsearch = require('elasticsearch')
 
-const bonsai_url = 'https://apkvjhlyd9:uf46209r8t@morehealth-api-3512295440.ap-southeast-2.bonsaisearch.net:443'
+const consult_url = 'https://t2q52h6mqq:dgx4334vwo@morehealth-consulta-3055891521.us-west-2.bonsaisearch.net:443'
+const exam_url = 'https://kbaqz76vfm:hwesamedbl@morehealth-examrouti-5496349902.us-east-1.bonsaisearch.net:443'
 
-const client = new elasticsearch.Client({
-    host: bonsai_url
+const consultClient = new elasticsearch.Client({
+    host: consult_url
 })
 
-module.exports = client
+const examClient = new elasticsearch.Client({
+    host: exam_url
+})
+
+module.exports = {
+    consultClient,
+    examClient
+}

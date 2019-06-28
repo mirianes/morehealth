@@ -7,7 +7,8 @@ const create = async (req, res) => {
         let vaga = await addConsult(req.body.idVaga)
 
         if (consulta.result == 'created' && vaga.updated) {
-            return res.status(201).send(true)
+            let consultas = await listConsult(req.body.date)
+            return res.status(200).send(consultas.hits.hits)
         } else {
             return res.status(400).send(false)
         }
