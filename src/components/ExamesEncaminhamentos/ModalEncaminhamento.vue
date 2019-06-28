@@ -22,9 +22,9 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="enc in especialidades" :key="enc.nome">
-                                        <td>{{ enc.nome }}</td>
-                                        <td>{{ enc.vagas }}</td>
+                                    <tr v-for="enc in especialidades" :key="enc._source.type">
+                                        <td>{{ enc._source.type }}</td>
+                                        <td>{{ enc._source.vagas }}</td>
                                         <td><a @click="editEnc(enc)"><i class="tiny material-icons">edit</i></a></td>
                                     </tr>
                                 </tbody>
@@ -37,8 +37,8 @@
                                 <h6 v-else>Adicionar Especialidade</h6>
                                 <div class="col s1"></div>
                                 <div class="input-field input-group col s6">
-                                    <input id="nameEx" type="text" class="validate" v-model="newEnc.nome">
-                                    <label for="nameEx">Tipo de Encaminhamento</label>
+                                    <input id="nameEnc" type="text" class="validate" v-model="newEnc.type">
+                                    <label for="nameEnc">Tipo de Encaminhamento</label>
                                 </div>
                                 <div class="input-field input-group col s4">
                                     <input id="vagasEx" type="number" v-model="newEnc.vagas"/>
@@ -61,8 +61,8 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="local in locais" :key="local">
-                                        <td>{{ local }}</td>
+                                    <tr v-for="local in locais" :key="local._source.name">
+                                        <td>{{ local._source.name }}</td>
                                         <td><a @click="editLocal(local)"><i class="tiny material-icons">edit</i></a></td>                                
                                     </tr>
                                 </tbody>
@@ -75,8 +75,8 @@
                                 <h6 v-else>Adicionar Local</h6>
                                 <div class="col s2"></div>
                                 <div class="input-field input-group col s8">
-                                    <input id="nameEx" type="text" class="validate" v-model="newLocal">
-                                    <label for="nameEx">Nome Local</label>
+                                    <input id="nameEnc" type="text" class="validate" v-model="newLocal.name">
+                                    <label for="nameEnc">Nome Local</label>
                                 </div>
                                 <div class="col s2"></div>
                             </div>
@@ -90,19 +90,31 @@
 </template>
 
 <script>
+import { elasticAPI } from '../../config.js'
 import { materializeModal, materializeModalClose, materializeTextFields } from '../../materialize'
+import { notificationError, notificationSuccess } from '../../notifications'
+import axios from 'axios'
 
 export default {
-    props: ["locais", "especialidades"],
     data() {
         return {
+            locais: [],
+            especialidades: [],
             newEnc: {},
-            newLocal: '',
+            newLocal: {},
             editEncCheck: false,
             addEncCheck: false,
             editLocalCheck: false,
             addLocalCheck: false,
-            index : -1
+            count : 0
+        }
+    },
+    created: async function() {
+        try {
+            await this.fetchEspecialidades()
+            await this.fetchLocais()
+        } catch (error) {
+            notificationError('Erro interno no servidor. Por favor, contate um administrador.')                            
         }
     },
     mounted: function() {
@@ -112,46 +124,95 @@ export default {
         materializeTextFields()
     },
     methods: {
-        saveEnc: function() {
-            if (this.editEncCheck) {
+        fetchEspecialidades: async function() {
+            this.especialidades = []
+            let result = await axios.get(`${elasticAPI.host}/examRouting/2`)
+            this.especialidades = result.data
+        },
+        fetchLocais: async function() {
+            this.locais = []
+            let result = await axios.get(`${elasticAPI.host}/places`)
+            this.locais = result.data
+        },
+        saveEnc: async function() {
+            try {
+                if (this.editEncCheck) {
+                    let result = await axios.put(`${elasticAPI.host}/examRouting/${this.newEnc.id}`, {
+                        type: this.newEnc.type,
+                        vagas: parseInt(this.newEnc.vagas),
+                        indicator: 2
+                    })
+
+                    this.especialidades = result.data
+                    await this.fetchEspecialidades()
+
+                    notificationSuccess('Exame atualizado com sucesso.')
+                } else {
+                    let result = await axios.post(`${elasticAPI.host}/examRouting`, {
+                        type: this.newEnc.type,
+                        vagas: parseInt(this.newEnc.vagas),
+                        indicator: 2
+                    })
+
+                    this.especialidades = result.data
+                    await this.fetchEspecialidades()
+
+                    notificationSuccess('Exame inserido com sucesso.')
+                }
                 this.editEncCheck = false
-                this.especialidades[this.index] = this.newEnc
-                this.newEnc = {}
-                this.index = -1
-                // Salvar o exame atualizado no bd
-                // Novo request do bd
-            } else {
                 this.addEncCheck = false
-                this.especialidades.push(this.newEnc)
                 this.newEnc = {}
+                this.updateParent()
+            } catch (error) {
+                notificationError('Erro interno no servidor. Por favor, contate um administrador.')                
             }
         },
-        updateLocal: function() {
-            if (this.editLocalCheck) {
+        updateLocal: async function() {
+            try {
+                if (this.editLocalCheck) {
+                    let result = await axios.put(`${elasticAPI.host}/places/${this.newLocal.id}`, {
+                        name: this.newLocal.name
+                    })
+    
+                    this.locais = result.data
+                    await this.fetchLocais()
+
+                    notificationSuccess('Local atualizado com sucesso.')
+                } else {
+                    let result = await axios.post(`${elasticAPI.host}/places`, {
+                        name: this.newLocal.name
+                    })
+    
+                    this.locais = result.data
+                    await this.fetchLocais()
+
+                    notificationSuccess('Local inserido com sucesso.')    
+                }
+    
+                this.newLocal = {}
                 this.editLocalCheck = false
-                this.locais[this.index] = this.newLocal
-                this.index = -1
-                // Salvar o exame atualizado no bd
-                // Novo request do bd
-            } else {
                 this.addLocalCheck = false
-                this.locais.push(this.newLocal)
+                this.updateParent()
+            } catch (error) {
+                notificationError('Erro interno no servidor. Por favor, contate um administrador.')                                
             }
         },
         editEnc: function(enc) {
-            this.newEnc = Object.assign({}, enc)
-            this.index = this.especialidades.indexOf(enc)
+            this.newEnc = Object.assign({}, enc._source)
+            this.newEnc.id = enc._id
             this.editEncCheck = true
         },
         editLocal: function(local) {
-            this.newLocal = local
-            this.index = this.locais.indexOf(local)
+            this.newLocal = Object.assign({}, local._source)
+            this.newLocal.id = local._id
             this.editLocalCheck = true
         },
         addEnc: function() {
+            this.newEnc = {}
             this.addEncCheck = true
         },
         addLocal: function() {
+            this.newLocal = {}
             this.addLocalCheck = true
         },
         cancelEdit: function(col) {
@@ -167,6 +228,12 @@ export default {
         },
         close: function() {
             materializeModalClose()
+        },
+        updateParent: function() {
+            this.count += 1
+            this.$emit('needUpdateEncaminhamento', {
+                needUpdate: this.count
+            })
         }
     }
 }
@@ -174,6 +241,10 @@ export default {
 
 
 <style scoped>
+.btn {
+    background-color: #0288d1 !important;
+}
+
 .input-group {
     display: table;
 }

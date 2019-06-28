@@ -1,8 +1,8 @@
 <template>
     <div>
         <h5>Exames</h5>
-        <h5>Vagas Disponíveis: {{ qntdVagas }}</h5>
-        <label v-for="exame in tipos" :key="exame.nome">{{ exame.nome }}: {{ exame.vagas }} vagas   |   </label>
+        <h5 v-if="getUpdate">Vagas Disponíveis: {{ totalVagas || 0 }}</h5>
+        <label v-for="exame in tipos" :key="exame._source.type">{{ exame._source.type }}: {{ exame._source.vagas }} vagas   |   </label>
         <div class="exames">
             <div class="row">
                 <div class="col s5">
@@ -37,14 +37,14 @@
                 <div class="input-field col s6">
                     <select @change="setExame($event)">
                         <option value="" disabled selected>Exame</option>
-                        <option v-for="tipo in tipos" :value="tipo.nome" :key="tipo.nome">{{ tipo.nome }}</option>
+                        <option v-for="tipo in tipos" :value="`${tipo._source.type} ${tipo._id}`" :key="tipo._source.type">{{ tipo._source.type }}</option>
                     </select>
                     <label>Tipo de Exame</label>
                 </div>
                 <div class="input-field col s6">
                     <select @change="setLocal($event)">
                         <option value="" disabled selected>Local</option>
-                        <option v-for="local in locais" :value="local" :key="local">{{ local }}</option>
+                        <option v-for="local in locais" :value="local._source.name" :key="local._source.name">{{ local._source.name }}</option>
                     </select>
                     <label>Local do Exame</label>
                 </div>
@@ -79,14 +79,16 @@
 </template>
 
 <script>
+import { elasticAPI } from '../../config.js'
 import { materializeSelect, materializeTextFields } from '../../materialize'
 import { notificationError } from '../../notifications'
 import { imgData } from '../../config'
 import VueCtk from 'vue-ctk-date-time-picker'
+import axios from 'axios'
 import jsPDF from 'jspdf'
 
 export default {
-    props: ["locais", "tipos"],
+    props: ['needUpdate'],
     components: {
         VueCtk
     },
@@ -99,55 +101,82 @@ export default {
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
             localSelected: '',
-            exameSelected: '',
-            // locais: [],
+            exameSelected: {},
+            locais: [],
+            tipos: [],
             preparacao: '',
             observacao: '',
-            exames: [],
             totalVagas: 0,
-            qntdVagas: 0
+            usf: this.$store.getters.usf,
+            doctor: this.$store.getters.doctor
         }
     },
-    created: function() {
-        this.minDate.setDate(this.minDate.getDate() - 1)
-        this.setTotalVagas()
+    created: async function() {
+        try {
+            await this.fetchTipos()
+            await this.fetchLocais()
+            this.minDate.setDate(this.minDate.getDate() - 1)
+            this.setTotalVagas()
+        } catch (error) {
+            notificationError('Erro interno no servidor. Por favor, contate um administrador.')            
+        }
     },
-    mounted: function() {
+    updated: function() {
         materializeSelect()
         materializeTextFields()
     },
     methods: {
-        fetchLocais: function() {
-            // Request bd
+        fetchLocais: async function() {
+            this.locais = []
+            let result = await axios.get(`${elasticAPI.host}/places`)
+            this.locais = result.data
         },
-        fetchTipos: function() {
-            // Request bd
+        fetchTipos: async function() {
+            this.tipos = []
+            let result = await axios.get(`${elasticAPI.host}/examRouting/1`)
+            this.tipos = result.data
         },
         setTotalVagas: function() {
             this.tipos.forEach(element => {
-                this.totalVagas += element.vagas
-            });
-            this.qntdVagas = this.totalVagas - this.exames.length
+                this.totalVagas += element._source.vagas
+            })
         },
         setExame: function(event) {
-            this.exameSelected = event.target.value
-            // var index = this.tipos.map((element) => { return element.nome }).indexOf(this.exameSelected)
-            // this.locais = this.tipos[index].locais
+            let exame = event.target.value.split(' ')
+            this.exameSelected = {
+                name: exame[0],
+                id: exame[1]
+            }
         },
         setLocal: function(event) {
             this.localSelected = event.target.value
         },
         checkInfos: function() {
             if (this.pacientName !== '' && this.idProntuario !== '' && this.cartaoSUS !== '' && this.date !== undefined && 
-                this.time !== undefined && this.exameSelected !== '' && this.localSelected !== '' && this.preparacao !== '') {
-                    this.generatePDF()
-                    this.exames.push(this.exameSelected)
-                    this.qntdVagas = this.totalVagas - this.exames.length
-                    var index = this.tipos.map((element) => { return element.nome }).indexOf(this.exameSelected)
-                    if (index != -1) this.tipos[index].vagas -= 1
-                    this.clearAll()
+                this.time !== undefined && this.exameSelected !== {} && this.localSelected !== '' && this.preparacao !== '') {
+                    let index = this.tipos.map((element) => { return element._source.type }).indexOf(this.exameSelected.name)
+                    if (this.tipos[index]._source.vagas > 0) {
+                        this.saveExam()
+                    } else {
+                        notificationError('Não há mais vagas para o exame escolhido.')
+                    }
             } else {
                 notificationError('Todos os campos devem estar preenchidos.')
+            }
+        },
+        saveExam: async function() {
+            try {
+                await axios.post(`${elasticAPI.host}/exam`, {
+                    prontuarioID: this.idProntuario,
+                    pacientName: this.pacientName,
+                    date: this.date,
+                    exam: this.exameSelected,
+                    place: this.localSelected
+                })
+                this.generatePDF()
+                this.clearAll()
+            } catch (error) {
+                
             }
         },
         clearAll: function() {
@@ -162,14 +191,15 @@ export default {
             this.observacao = ''
         },
         generatePDF: function() {
+            let phone = this.usf.phone.replace(/(\d{2})(\d{4})(\d{4})/, '($1)$2-$3')
             var doc = new jsPDF()
 
             doc.addImage(imgData, 'PNG', 25, 20, 40, 15);
             doc.setFontSize(20);
             doc.text('Unidade de Saúde da Família', 83, 20);
-            doc.text('Quirino Ribeiro de Queiroz', 87, 30);
+            doc.text(this.usf.name, 87, 30);
             doc.setFontSize(12);
-            doc.text('(81)3436-3280 | Paulista, PE', 105, 40);
+            doc.text(`${phone} | ${this.usf.city}, ${this.usf.state.slice(0,2).toUpperCase()}`, 105, 40);
             doc.setFontSize(20);
             doc.text('Solicitação de Exame', 70, 55);
             doc.line(10, 65, 200, 65);
@@ -215,10 +245,18 @@ export default {
 
             doc.line(70, 250, 150, 250);
             doc.setFontSize(10);
-            doc.text(`Médico: Fulano de Tal`, 94, 255);
-            doc.text(`CRM: 19823`, 100, 260);
+            doc.text(`Médico: ${this.doctor.name}`, 94, 255);
+            doc.text(`CRM: ${this.doctor.crm}`, 100, 260);
 
             doc.save('exame.pdf')
+        }
+    },
+    computed: {
+        getUpdate: async function() {
+            let count = this.needUpdate
+            await this.fetchTipos()
+            await this.fetchLocais()
+            return this.needUpdate
         }
     }
 }

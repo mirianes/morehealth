@@ -1,10 +1,10 @@
 <template>
     <div class="row">
         <div class="col s6">
-            <Exame :locais="locais" :tipos="tiposEx"/>
+            <Exame :needUpdate="needUpdateExam"/>
         </div>
         <div class="col s6">
-            <Encaminhamento :locaisEnc="locais" :especialidades="especialidades"/>
+            <Encaminhamento :needUpdate="needUpdateEnc"/>
         </div>
          <div class="fixed-action-btn" v-if="this.$store.getters.user.user_type == '2'">
             <a class="btn-floating btn-large blue">
@@ -16,9 +16,9 @@
             </ul>
         </div>
 
-        <!-- Modal para configurar exames -->
-        <ModalExame :locais="locais" :tipos="tiposEx"/>
-        <ModalEncaminhamento :locais="locais" :especialidades="especialidades"/>
+        <!-- Modal para configurar exames e encaminhamentos -->
+        <ModalExame @needUpdateExame="needUpdateExam = $event.needUpdate"/>
+        <ModalEncaminhamento @needUpdateEncaminhamento="needUpdateEnc = $event.needUpdate"/>
     </div>
 </template>
 
@@ -38,16 +38,9 @@ export default {
     },
     data() {
         return {
-            qntdVagasEx: 0,
-            qntdVagasEnc: 0,
-            locais: ["H. Nossa Senhora do Ó", "Unimed Ilha do Leite", "H. Tricentenário"],
-            tiposEx: [{nome: "Sangue", vagas: 2}, {nome: "Fezes", vagas: 19}, {nome: "Urina", vagas: 16}],
-            especialidades: [{nome: "Oftalmologista", vagas: 5}, {nome: "Pediatra", vagas: 9}, {nome: "Ginecologista", vagas: 17}]
+            needUpdateExam: 0,
+            needUpdateEnc: 0
         }
-    },
-    created: function() {
-        this.qntdVagasEx = this.totalVagasEx
-        this.qntdVagasEnc = this.totalVagasEnc
     },
     mounted: function() {
         materializeFloating()

@@ -1,8 +1,8 @@
 <template>
     <div>
         <h5>Encaminhamentos</h5>
-        <h5>Vagas Disponíveis: {{ qntdVagas }}</h5>
-        <label v-for="encaminhamento in especialidades" :key="encaminhamento.nome">{{encaminhamento.nome}}: {{encaminhamento.vagas}} vagas   |   </label>
+        <h5 v-if="getUpdate">Vagas Disponíveis: {{ totalVagas || 0 }}</h5>
+        <label v-for="encaminhamento in especialidades" :key="encaminhamento._source.type">{{encaminhamento._source.type}}: {{encaminhamento._source.vagas}} vagas   |   </label>
         <div class="encaminhamentos">
             <div class="row">
                 <div class="col s5">
@@ -39,14 +39,14 @@
                 <div class="input-field col s6">
                     <select @change="setEspecialidade($event)" id="especialidade">
                         <option value="" disabled selected>Especialidade</option>
-                        <option v-for="especialidade in especialidades" :value="especialidade.nome" :key="especialidade.nome">{{ especialidade.nome }}</option>
+                        <option v-for="especialidade in especialidades" :value="`${especialidade._source.type} ${especialidade._id}`" :key="especialidade._source.type">{{ especialidade._source.type }}</option>
                     </select>
                     <label>Especialidade</label>
                 </div>
                 <div class="input-field col s6">
                     <select @change="setLocal($event)">
                         <option value="" disabled selected>Local</option>
-                        <option v-for="local in locaisEnc" :value="local" :key="local">{{ local }}</option>
+                        <option v-for="local in locaisEnc" :value="local._source.name" :key="local._source.name">{{ local._source.name }}</option>
                     </select>
                     <label>Local do Encaminhamento</label>
                 </div>
@@ -81,14 +81,16 @@
 </template>
 
 <script>
+import { elasticAPI, mongoAPI } from '../../config.js'
 import { materializeSelect, materializeTextFields } from '../../materialize'
 import { notificationError } from '../../notifications'
 import { imgData } from '../../config'
 import VueCtk from 'vue-ctk-date-time-picker'
+import axios from 'axios'
 import jsPDF from 'jspdf'
 
 export default {
-    props: ["locaisEnc", "especialidades"],
+    props: ['needUpdate'],
     components: {
         VueCtk
     },
@@ -100,61 +102,94 @@ export default {
             minDate: new Date(),
             dateEnc: new Date().toLocaleDateString(),
             timeEnc: new Date().toLocaleTimeString(),
-            localSelected: '',
-            especialidadeSelected: '',
+            localSelectedEnc: '',
+            especialidadeSelected: {},
+            locaisEnc: [],
+            especialidades: [],
             motivo: '',
             observacaoEnc: '',
-            encaminhamentos: [],
             totalVagas: 0,
-            qntdVagas: 0
+            usf: this.$store.getters.usf,
+            doctor: this.$store.getters.doctor
         }
     },
-    created: function() {
-        this.minDate.setDate(this.minDate.getDate() - 1)
-        this.setTotalVagas()
+    created: async function() {
+        try {
+            await this.fetchEspecialidades()
+            await this.fetchLocais()
+            this.minDate.setDate(this.minDate.getDate() - 1)
+            this.setTotalVagas()
+        } catch (error) {
+            console.log(error)
+            notificationError('Erro interno no servidor. Por favor, contate um administrador.')
+        }
     },
-    mounted: function() {
+    updated: function() {
         materializeSelect()
         materializeTextFields()
     },
     methods: {
-        fetchLocais: function() {
-            // Request bd
+        fetchLocais: async function() {
+            this.locaisEnc = []
+            let result = await axios.get(`${elasticAPI.host}/places`)
+            this.locaisEnc = result.data
         },
-        fetchTipos: function() {
-            // Request bd
+        fetchEspecialidades: async function() {
+            this.especialidades = []
+            let result = await axios.get(`${elasticAPI.host}/examRouting/2`)
+            this.especialidades = result.data
         },
         setTotalVagas: function() {
             this.especialidades.forEach(element => {
-                this.totalVagas += element.vagas
+                this.totalVagas += element._source.vagas
             });
-            this.qntdVagas = this.totalVagas - this.encaminhamentos.length
         },
         setEspecialidade: function(event) {
-            this.especialidadeSelected = event.target.value
+            let especialidade = event.target.value.split(' ')
+            this.especialidadeSelected = {
+                name: especialidade[0],
+                id: especialidade[1]
+            }
         },
         setLocal: function(event) {
-            this.localSelected = event.target.value
+            this.localSelectedEnc = event.target.value
         },
         checkInfos: function() {
             if (this.pacientNameEnc !== '' && this.idProntuarioEnc !== '' && this.cartaoSUSEnc !== '' && this.dateEnc !== undefined && 
-                this.timeEnc !== undefined && this.especialidadeSelected !== '' && this.localSelected !== '' && this.motivo !== '') {
-                    this.generatePDF()
-                    this.encaminhamentos.push(this.especialidadeSelected)
-                    this.qntdVagas = this.totalVagas - this.encaminhamentos.length
-                    var index = this.tipos.map((element) => { return element.nome }).indexOf(this.exameSelected)
-                    if (index != -1) this.tipos[index].vagas -= 1
-                    this.clearAll()
+                this.timeEnc !== undefined && this.especialidadeSelected !== {} && this.localSelectedEnc !== '' && this.motivo !== '') {
+                    let index = this.especialidades.map((element) => { return element._source.type }).indexOf(this.especialidadeSelected.name)
+                    if (this.especialidades[index]._source.vagas > 0) {
+                        this.saveRouting()
+                    } else {
+                        notificationError('Não há mais vagas para a especialidade escolhida.')
+                    }
             } else {
                 notificationError('Todos os campos devem estar preenchidos.')
+            }
+        },
+        saveRouting: async function() {
+            try {
+                await axios.post(`${elasticAPI.host}/routing`, {
+                    prontuarioID: this.idProntuarioEnc,
+                    pacientName: this.pacientNameEnc,
+                    date: this.dateEnc,
+                    specialty: this.especialidadeSelected.name,
+                    place: this.localSelectedEnc,
+                    idExamRouting: this.especialidadeSelected.id
+                })
+                this.generatePDF()
+                this.clearAll()
+            } catch (error) {
+                console.log(error)
+                notificationError('Erro interno no servidor. Por favor, contate um administrador.')
             }
         },
         clearAll: function() {
             this.pacientNameEnc = ''
             this.idProntuarioEnc = ''
             this.cartaoSUSEnc = ''
-            this.dateEnc = new Date()
-            this.timeEnc = ''
+            this.dateEnc = new Date().toLocaleDateString()
+            this.timeEnc = new Date().toLocaleTimeString()
             this.especialidadeSelected = ''
             this.localSelected = ''
             this.motivo = ''
@@ -162,14 +197,15 @@ export default {
             var x = document.querySelector('#especialidade')
         },
         generatePDF: function() {
+            let phone = this.usf.phone.replace(/(\d{2})(\d{4})(\d{4})/, '($1)$2-$3')
             var doc = new jsPDF()
 
             doc.addImage(imgData, 'PNG', 25, 20, 40, 15);
             doc.setFontSize(20);
             doc.text('Unidade de Saúde da Família', 83, 20);
-            doc.text('Quirino Ribeiro de Queiroz', 87, 30);
+            doc.text(this.usf.name, 87, 30);
             doc.setFontSize(12);
-            doc.text('(81)3436-3280 | Paulista, PE', 105, 40);
+            doc.text(`${phone} | ${this.usf.city}, ${this.usf.state.slice(0,2).toUpperCase()}`, 105, 40);
             doc.setFontSize(20);
             doc.text('Solicitação de Encaminhamento', 60, 55);
             doc.line(10, 65, 200, 65);
@@ -199,11 +235,11 @@ export default {
             doc.setFontStyle('bold');
             doc.text('Local:', 20, 105);
             doc.setFontStyle('normal');
-            doc.text(this.localSelected, 34, 105);
+            doc.text(this.localSelectedEnc, 34, 105);
             doc.setFontStyle('bold');
             doc.text('Especialidade:', 20, 110);
             doc.setFontStyle('normal');
-            doc.text(this.especialidadeSelected, 51, 110);
+            doc.text(this.especialidadeSelected.name, 51, 110);
 
             doc.setFontStyle('bold');
             doc.text('Motivo:', 20, 125);
@@ -216,10 +252,18 @@ export default {
 
             doc.line(70, 250, 150, 250);
             doc.setFontSize(10);
-            doc.text(`Médico: Fulano de Tal`, 94, 255);
-            doc.text(`CRM: 19823`, 100, 260);
+            doc.text(`Médico: ${this.doctor.name}`, 94, 255);
+            doc.text(`CRM: ${this.doctor.crm}`, 100, 260);
 
             doc.save('encaminhamento.pdf')
+        }
+    },
+    computed: {
+        getUpdate: async function() {
+            let count = this.needUpdate
+            await this.fetchEspecialidades()
+            await this.fetchLocais()
+            return this.needUpdate
         }
     }
 }

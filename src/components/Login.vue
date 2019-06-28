@@ -34,19 +34,22 @@ export default {
         }
     },
     methods: {
-        login: function() {
-            axios.post(`${mongoAPI.host}/user/login`, {
-                email: this.email,
-                password: this.password
-            }).then(result => {
+        login: async function() {
+            try {
+                const result = await axios.post(`${mongoAPI.host}/user/login`, {
+                    email: this.email,
+                    password: this.password
+                })
                 let data = result.data
                 if (data.auth) {
                     this.$store.dispatch('login', {user: data.user, token: data.token})
                     if (this.$store.getters.isLogged) {
+                        const infos = await axios.get(`${mongoAPI.host}/usf/getData/${this.$store.getters.user.usf_id}`)
+                        this.$store.dispatch('setInfo', {usf: infos.data.usf, doctor: infos.data.doctor})
                         this.$router.push({ path: '/consulta' })
                     }
                 }
-            }).catch(err => {
+            } catch (error) {
                 if (err.response) {
                     if (!err.response.auth) {
                         notificationError('Usuário ou Senha incorretos.')
@@ -58,7 +61,7 @@ export default {
                 } else {
                     notificationError('Erro interno, por favor contate um administrador.')
                 }
-            })
+            }
         }
     }
 }

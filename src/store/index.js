@@ -13,7 +13,9 @@ const store = new Vuex.Store({
     plugins: [vuexPersist.plugin],
     state: {
         user: {},
-        token: ''
+        token: '',
+        usf: {},
+        doctor: {}
     },
     mutations: {
         setUser (store, user) {
@@ -22,6 +24,12 @@ const store = new Vuex.Store({
         setToken (store, token) {
             store.token = token
         },
+        setUsf (store, usf) {
+            store.usf = usf
+        },
+        setDoctor (store, doctor) {
+            store.doctor = doctor
+        },
         logout (store) {
             store.token = ''
             store.user = {}
@@ -29,7 +37,9 @@ const store = new Vuex.Store({
     },
     getters: {
         user: store => store.user,
-        isLogged: store => store.token !== ''
+        isLogged: store => store.token !== '',
+        usf: store => store.usf,
+        doctor: store => store.doctor
     },
     actions: {
         setUser ({ commit }, user) {
@@ -38,6 +48,10 @@ const store = new Vuex.Store({
         login ({ commit }, data) {
             commit('setUser', data.user)
             commit('setToken', data.token)
+        },
+        setInfo ({ commit }, data) {
+            commit('setUsf', data.usf)
+            commit('setDoctor', data.doctor)
         },
         logout ({ commit }) {
             commit('logout')

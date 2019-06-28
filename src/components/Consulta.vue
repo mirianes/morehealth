@@ -113,8 +113,6 @@ export default {
     },
     created: async function() {
         try {
-            console.log(new Date().toLocaleDateString())
-            console.log(new Date().toLocaleTimeString())
             await this.fetchVagas()
             await this.fetchConsultas()
         } catch (error) {
@@ -150,8 +148,7 @@ export default {
 
             let dateController = new Date().toLocaleDateString().slice(0, 10).split('/').reverse().join('-')
             let consultas = await axios.get(`${elasticAPI.host}/consult/${dateController}`)
-
-            consultas.data.sort((a, b) => { return a._source.date - b._source.date})
+            // consultas.data.sort((a, b) => { return a._source.date - b._source.date})
 
             consultas.data.forEach(element => {
                 this.consultas.push({
@@ -161,7 +158,6 @@ export default {
                     completed: element._source.completed,
                     id: element._id
                 })
-                
             })
         },
         openSettingsModal: function() {
@@ -171,12 +167,18 @@ export default {
             if (this.newTotalVagas < this.consultas.length) {
                 notificationError('O número total de vagas não pode ser menor que a quantidade de consultas já agendadas.')
             } else {
+                let dateController = new Date().toLocaleDateString().slice(0, 10).split('/').reverse().join('-')
+
                 let result = await axios.put(`${elasticAPI.host}/vacancies/${this.vagas.id}`, {
-                    totalVagas: parseInt(this.newTotalVagas)
+                    totalVagas: parseInt(this.newTotalVagas),
+                    date: dateController
                 })
+
+                this.vagas = result.data[0]._source
+                this.vagas.id = result.data[0]._id
+
                 notificationSuccess('Total de vagas alterado com sucesso.')
                 materializeModalClose()
-                this.fetchVagas()
             }
         },
         addConsulta: async function() {
@@ -202,7 +204,17 @@ export default {
                     idVaga: this.vagas.id
                 })
 
-                await this.fetchConsultas()
+                this.consultas = []
+                result.data.forEach(element => {
+                    this.consultas.push({
+                        date: element._source.date.slice(0, 10).split('-').reverse().join('/'),
+                        pacientName: element._source.pacientName,
+                        prontuarioID: element._source.prontuarioID,
+                        completed: element._source.completed,
+                        id: element._id
+                    })
+                })
+
                 this.fetchVagas()
                 materializeModalClose()
                 notificationSuccess('Consulta agendada com sucesso.')

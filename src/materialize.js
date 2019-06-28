@@ -34,5 +34,9 @@ module.exports = {
     },
     materializeTextFields() {
         M.updateTextFields();
+    },
+    materializeCollapsible() {
+        var elems = document.querySelectorAll('.collapsible')
+        var instances = M.Collapsible.init(elems, {})
     }
 }
