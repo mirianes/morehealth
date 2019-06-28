@@ -1,7 +1,7 @@
 <template>
     <div>
         <ul id="menuPerfil" class="dropdown-content">
-            <li><router-link to="collapsible.html" class="item-dropdown">Editar Perfil</router-link></li>
+            <li><router-link to="/perfil" class="item-dropdown">Editar Perfil</router-link></li>
             <li class="divider"></li>
             <li><a class="item-dropdown" @click="logout()"><i class="material-icons left">exit_to_app</i>Sair</a></li>
         </ul>

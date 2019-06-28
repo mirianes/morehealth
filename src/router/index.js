@@ -6,6 +6,7 @@ import CadastroUSF from '@/components/CadastroUSF'
 import Consulta from '@/components/Consulta'
 import ExameEncaminhamento from '@/components/ExameEncaminhamento'
 import Faq from '@/components/Faq'
+import Perfil from '@/components/Perfil'
 import NotFound from '@/components/NotFound'
 
 const router = new Router({
@@ -17,6 +18,7 @@ const router = new Router({
     { path: '/consulta', name: 'Consulta', component: Consulta, meta: { requiresAuth: true } },
     { path: '/examesEncaminhamentos', name: 'ExameEncaminhamento', component: ExameEncaminhamento, meta: { requiresAuth: true } },
     { path: '/faq', name: 'Faq', component: Faq, meta: { requiresAuth: true } },
+    { path: '/perfil', name: 'Perfil', component: Perfil, meta: { requiresAuth: true } },
     { path: '/*', name: 'NotFound', component: NotFound}
   ]
 })
