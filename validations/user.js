@@ -48,6 +48,28 @@ const update = async (req, res, next) => {
     if (await checkUserExists(req.params.id, res) == false) {
         return res.status(400).send({error: 'Esse usuário não existe.'})
     }
+    if (checkEmpty(req.body.name)) {
+        return res.status(400).send({error: 'O campo nome não pode ficar vazio.'})
+    }
+    if (checkEmpty(req.body.code)) {
+        return res.status(400).send({error: 'O campo identificador não pode ficar vazio.'})
+    }
+    if (checkEmpty(req.body.phone)) {
+        return res.status(400).send({error: 'O campo telefone não pode ficar vazio.'})
+    }
+    return next()
+}
+
+const changePassword = async (req, res, next) => {
+    if (await checkUserExists(req.params.id, res) == false) {
+        return res.status(400).send({error: 'Esse usuário não existe.'})
+    }
+    if (checkEmpty(req.body.password)) {
+        return res.status(400).send({error: 'O campo senha não pode ficar vazio.'})
+    }
+    if (checkEmpty(req.body.newPassword)) {
+        return res.status(400).send({error: 'O campo nova senha não pode ficar vazio.'})
+    }
     return next()
 }
 
@@ -99,6 +121,7 @@ module.exports = {
     create,
     list,
     update,
+    changePassword,
     drop,
     login
 }

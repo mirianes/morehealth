@@ -34,17 +34,31 @@ const update = (req, res) => {
         if (error) {
             return res.status(400).send({error: error})
         } else {
-            let newPassword = bcrypt.hashSync(req.body.password, 10)
             user.name = req.body.name
             user.code = req.body.code
             user.phone = req.body.phone
-            user.email = req.body.email
-            user.password = newPassword
-            user.user_type = req.body.user_type
-            user.usf_id = req.body.usf_id
             user.save().then(newUser => {
                 user.password = undefined
                 return res.status(200).send(newUser)
+            }).catch(err => {
+                return res.status(400).send({error: err})
+            })
+        }
+    })
+}
+
+const changePassword = (req, res) => {
+    User.findById(req.params.id, (error, user) => {
+        if (error) {
+            return res.status(400).send({error: error})
+        } else {
+            let passwordIsValid = bcrypt.compareSync(req.body.password, user.password)
+            if (!passwordIsValid) return res.status(401).send({auth: false})
+            let newPassword = bcrypt.hashSync(req.body.newPassword, 10)
+            user.password = newPassword
+            user.save().then(newUser => {
+                newUser.password = undefined
+                return res.status(200).send({auth: true})
             }).catch(err => {
                 return res.status(400).send({error: err})
             })
@@ -87,6 +101,7 @@ module.exports = {
     create,
     list,
     update,
+    changePassword,
     drop,
     login
 }

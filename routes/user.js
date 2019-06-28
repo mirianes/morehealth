@@ -6,6 +6,7 @@ const userController = require('../controllers/user')
 
 router.post('/', userValidation.create, userController.create)
       .get('/', userValidation.list, userController.list)
+      .put('/:id/changePassword', userValidation.changePassword, userController.changePassword)
       .put('/:id', userValidation.update, userController.update)
       .delete('/:id', userValidation.drop, userController.drop)
 
