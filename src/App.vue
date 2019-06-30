@@ -35,12 +35,4 @@ export default {
 .guest {
   background-image: linear-gradient(to bottom right, #01579b, #00bbff);
 }
-
-.container {
-  margin: auto;
-  width: 80%;
-  padding: 10px;
-  background-color: #0288d1;
-  border-radius: 50px;
-}
 </style>

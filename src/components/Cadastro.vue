@@ -254,6 +254,14 @@ export default {
     border-radius: 50px;
 } */
 
+.container {
+  margin: auto !important;
+  width: 80% !important;
+  padding: 10px !important;
+  background-color: #0288d1 !important;
+  border-radius: 50px !important;
+}
+
 .title {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-style: italic;

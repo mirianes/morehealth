@@ -97,5 +97,13 @@ button {
 button:hover {
     background-color: #039be5;
 }
+
+.container {
+  margin: auto !important;
+  width: 80% !important;
+  padding: 10px !important;
+  background-color: #0288d1 !important;
+  border-radius: 50px !important;
+}
 </style>
 
