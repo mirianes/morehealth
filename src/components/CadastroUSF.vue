@@ -153,10 +153,10 @@ export default {
                     notificationSuccess('USF criada com sucesso!')
                     this.$router.push({ path: '/cadastro' })
                 }
-            }).catch(err => {
-                if (err.response) {
-                    notificationError(err.response.data.error)
-                } else if (err.request) {
+            }).catch(error => {
+                if (error.response) {
+                    notificationError(error.response.data.error)
+                } else if (error.request) {
                     notificationError('Não foi possível conectar ao servidor. Tente novamente mais tarde!')                    
                 } else {
                     notificationError('Erro interno, por favor contate um administrador.')

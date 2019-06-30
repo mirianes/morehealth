@@ -123,10 +123,10 @@ export default {
         fetchUSFs: async function() {
             let usfs = axios.get(`${mongoAPI.host}/usf`).then(response => {
                 this.usfs = response.data
-            }).catch(err => {
-                if (err.response) {
-                    notificationError(err.response.data.error)
-                } else if (err.request) {
+            }).catch(error => {
+                if (error.response) {
+                    notificationError(error.response.data.error)
+                } else if (error.request) {
                     notificationError('Não foi possível conectar ao servidor. Tente novamente mais tarde!')                    
                 } else {
                     notificationError('Erro interno, por favor contate um administrador.')
@@ -225,10 +225,10 @@ export default {
                         this.$router.push({ path: '/consulta' })
                     }
                 }
-            }).catch(err => {
-                if (err.response) {
-                    notificationError(err.response.data.error)
-                } else if (err.request) {
+            }).catch(error => {
+                if (error.response) {
+                    notificationError(error.response.data.error)
+                } else if (error.request) {
                     notificationError('Não foi possível conectar ao servidor. Tente novamente mais tarde!')                    
                 } else {
                     notificationError('Erro interno, por favor contate um administrador.')

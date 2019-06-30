@@ -50,13 +50,13 @@ export default {
                     }
                 }
             } catch (error) {
-                if (err.response) {
-                    if (!err.response.auth) {
+                if (error.response) {
+                    if (!error.response.auth) {
                         notificationError('Usuário ou Senha incorretos.')
                     } else {
-                        notificationError(err.response.data.error)
+                        notificationError(error.response.data.error)
                     }
-                } else if (err.request) {
+                } else if (error.request) {
                     notificationError('Não foi possível conectar ao servidor. Tente novamente mais tarde!')                    
                 } else {
                     notificationError('Erro interno, por favor contate um administrador.')
