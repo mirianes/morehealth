@@ -38,5 +38,14 @@ module.exports = {
     materializeCollapsible() {
         var elems = document.querySelectorAll('.collapsible')
         var instances = M.Collapsible.init(elems, {})
+    },
+    materializeModalOpen(id) {
+        var elems = document.querySelectorAll(id)
+        elems.forEach(element => {
+            var instance = M.Modal.getInstance(element)
+            if (!instance.isOpen) {
+                instance.open()
+            }
+        })
     }
 }

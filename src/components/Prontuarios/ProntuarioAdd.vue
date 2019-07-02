@@ -1,8 +1,9 @@
 <template>
-    <div id="modalProntuarioAdd" class="modal">
+    <div id="modalProntuarioAdd" class="modal" v-if="getProntuario">
         <div class="modal-header">
             <div class="row">
-                <div class="col s10 push-s1"><h4>Adicionar Prontuário</h4></div>
+                <div class="col s10 push-s1" v-if="prontuario.id"><h4>Prontuário {{ prontuario.id }}</h4></div>
+                <div class="col s10 push-s1" v-else><h4>Adicionar Prontuário</h4></div>
                 <div class="col s1 push-s1">
                     <a href="#!" id="modal-close" @click="close()"><i class="tiny material-icons">close</i></a></div>
             </div>
@@ -16,18 +17,14 @@
                         :noButton=true :only-date=true v-model="dateAtt" :autoClose=true :disabled=true />
                 </div>
                 <div class="input-field col s4 push-s2">
-                    <input type="text" id="sus" :class="{valid: msgSusError == 'success', 
-                        invalid: (msgSusError !== '' && msgSusError !== 'success')}" v-model="sus"/>
+                    <input type="text" id="sus" v-model="sus"/>
                     <label for="sus">Cartão do SUS</label>
-                    <span class="helper-text" :data-error="msgSusError" data-success=""></span>
                 </div>
             </div>
             <div class="row">
                 <div class="input-field col s12">
-                    <input type="text" id="name" :class="{valid: msgNameError == 'success', 
-                        invalid: (msgNameError !== '' && msgNameError !== 'success')}" v-model="name"/>
+                    <input type="text" id="name" v-model="name"/>
                     <label for="name">Nome Completo</label>
-                    <span class="helper-text" :data-error="msgNameError" data-success=""></span>
                 </div>
             </div>
             <div class="row">
@@ -55,7 +52,7 @@
                     <label for="instrucao">Grau de Instrução</label>
                 </div>
             </div>
-            <hr/>
+            <hr id="sectionSeparator"/>
             <h6 id="sectionTitle">Moléstia Atual</h6>
             <div class="row">
                 <div class="input-field col s12">
@@ -69,7 +66,7 @@
                     <label for="historico">História Clínica</label>
                 </div>
             </div>
-            <hr/>
+            <hr id="sectionSeparator"/>
             <h6 id="sectionTitle">História Pregressa</h6>
             <div class="row">
                 <div class="input-field col s12">
@@ -85,10 +82,10 @@
             </div>
             <div class="row">
                  <div class="input-field col s4 push-s2">
-                    <select @change="selectDoador($event, 'orgao')">
-                        <option value="" disabled selected>Escolha sua Opção</option>
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
+                    <select @change="selectDoador($event, 'orgao')" v-model="doadorOrgao">
+                        <option value="" disabled :selected="doadorOrgao == '' || doadorOrgao == undefined">Escolha sua Opção</option>
+                        <option value="Sim" :selected="doadorOrgao == 'Sim'">Sim</option>
+                        <option value="Não" :selected="doadorOrgao == 'Não'">Não</option>
                     </select>
                     <label>Doador de Órgãos?</label>
                 </div>
@@ -109,16 +106,21 @@
             </div>
         </div>
         <div class="modal-footer">
-            <a href="#!" class="waves-effect btn" @click="addProntuario()">Salvar</a>
+            <a href="#!" class="waves-effect btn" v-if="prontuario.id" @click="updateProntuario()">Salvar</a>
+            <a href="#!" class="waves-effect btn" v-else @click="addProntuario()">Salvar</a>
         </div>
     </div>
 </template>
 
 <script>
+import { postgreSqlAPI } from '../../config'
+import { notificationError, notificationSuccess } from '../../notifications'
 import { materializeModal, materializeModalClose, materializeTextFields, materializeSelect } from '../../materialize'
+import axios from 'axios'
 import VueCtk from 'vue-ctk-date-time-picker'
 
 export default {
+    props: ["prontuario"],
     components: {
         VueCtk
     },
@@ -128,9 +130,7 @@ export default {
             dateAtt: new Date().toLocaleDateString(),
             dateNasc: new Date().toLocaleDateString(),
             sus: '',
-            msgSusError: '',
             name: '',
-            msgNameError: '',
             raca: '',
             sexo: '',
             ecivil: '',
@@ -149,12 +149,76 @@ export default {
         materializeTextFields()
         materializeSelect()
     },
+    updated: function() {
+        materializeTextFields()
+    },
     methods: {
         close: function() {
             materializeModalClose()
+            this.updateParent()
         },
-        addProntuario: function() {
+        addProntuario: async function() {
+            try {
+                const prontuario = await axios.post(`${postgreSqlAPI.host}/prontuario`, {
+                    dataAtt: this.dateAtt,
+                    cartaoSUS: this.sus,
+                    nome: this.name,
+                    dataNasc: this.dateNasc,
+                    raca: this.raca,
+                    sexo: this.sexo,
+                    estCivil: this.ecivil,
+                    grauInst: this.instrucao,
+                    queixa: this.queixa,
+                    historico: this.historico,
+                    doencas: this.doencas,
+                    alergias: this.alergias,
+                    doadorOrgao: this.doadorOrgao,
+                    doadorSangue: this.doadorSangue,
+                    outrasInfo: this.outrasInfo
+                })
 
+                notificationSuccess('Prontuário cadastrado com sucesso.')
+                materializeModalClose()
+            } catch (error) {
+                if (error.response) {
+                    notificationError(error.response.data.error)
+                } else {
+                    notificationError('Erro interno, por favor contate um administrador.')                
+                }
+            }
+        },
+        updateProntuario: async function() {
+            try {
+                const prontuario = await axios.put(`${postgreSqlAPI.host}/prontuario/${this.prontuario.id}`, {
+                    prontuario: {
+                        dataAtt: this.dateAtt,
+                        cartaoSUS: this.sus,
+                        nome: this.name,
+                        dataNasc: this.dateNasc,
+                        raca: this.raca,
+                        sexo: this.sexo,
+                        estCivil: this.ecivil,
+                        grauInst: this.instrucao,
+                        queixa: this.queixa,
+                        historico: this.historico,
+                        doencas: this.doencas,
+                        alergias: this.alergias,
+                        doadorOrgao: this.doadorOrgao,
+                        doadorSangue: this.doadorSangue,
+                        outrasInfo: this.outrasInfo
+                    }
+                })
+
+                notificationSuccess('Prontuário atualizado com sucesso.')
+                materializeModalClose()
+                this.updateParent()
+            } catch (error) {
+                if (error.response) {
+                    notificationError(error.response.data.error)
+                } else {
+                    notificationError('Erro interno, por favor contate um administrador.')                
+                }
+            }
         },
         selectDoador: function(event, label) {
             if (label === 'orgao') {
@@ -162,6 +226,32 @@ export default {
             } else if (label === 'sangue') {
                 this.doadorSangue = event.target.value
             }
+        },
+        updateParent: function() {
+            this.$emit('prontuarioShow', {
+                prontuario: {}
+            })
+        }
+    },
+    computed: {
+        getProntuario: function() {
+            this.dataAtt = this.prontuario.dateAtt
+            this.sus = this.prontuario.cartaoSUS
+            this.name = this.prontuario.nome
+            this.dataNasc = this.prontuario.dateNasc
+            this.raca = this.prontuario.raca
+            this.sexo = this.prontuario.sexo
+            this.ecivil = this.prontuario.estCivil
+            this.instrucao = this.prontuario.grauInst
+            this.queixa = this.prontuario.queixa
+            this.historico = this.prontuario.historico
+            this.doencas = this.prontuario.doencas
+            this.alergias = this.prontuario.alergias
+            this.doadorOrgao = this.prontuario.doadorOrgao || ""
+            this.doadorSangue = this.prontuario.doadorSangue
+            this.outrasInfo = this.prontuario.outrasInfo
+
+            return this.prontuario
         }
     }
 }
@@ -209,5 +299,9 @@ export default {
 
 #dataAtt, #dataNasc {
     color: black;
+}
+
+#sectionSeparator {
+    border-style: dashed;
 }
 </style>
