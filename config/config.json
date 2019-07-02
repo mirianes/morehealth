@@ -1,0 +1,27 @@
+{
+  "development": {
+    "username": "hnxexhfquqkboa",
+    "password": "4c16d493ba413e31f2b93ee7e34525d37dd17403c9a1e9fbbb03f0b61082108b",
+    "database": "db2ph1jg1cab0r",
+    "host": "ec2-50-19-221-38.compute-1.amazonaws.com",
+    "dialect": "postgres",
+    "protocol": "postgres",
+    "dialectOptions": {
+      "ssl": true
+    }
+  },
+  "test": {
+    "username": "postgres",
+    "password": "Pernambuco",
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "Pernambuco",
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}
